@@ -11,7 +11,7 @@
  * instantiate a ZX_Sensor object, call init(), and call the desired
  * functions.
  */
- 
+
 #include <Arduino.h>
 #include <Wire.h>
 
@@ -46,10 +46,10 @@ ZX_Sensor::~ZX_Sensor()
 bool ZX_Sensor::init(   InterruptType interrupts /* = NO_INTERRUPTS */,
                             bool active_high /* = true */)
 {
-    
+
     /* Initialize I2C */
     Wire.begin();
-    
+
     /* Enable DR interrupts based on desired interrupts */
     setInterruptTrigger(interrupts);
     configureInterrupts(active_high, false);
@@ -58,7 +58,7 @@ bool ZX_Sensor::init(   InterruptType interrupts /* = NO_INTERRUPTS */,
     } else {
         enableInterrupts();
     }
-    
+
     return true;
 }
 
@@ -70,7 +70,7 @@ bool ZX_Sensor::init(   InterruptType interrupts /* = NO_INTERRUPTS */,
 uint8_t ZX_Sensor::getModelVersion()
 {
     uint8_t ver;
-    
+
     if ( !wireReadDataByte(ZX_MODEL, ver) ) {
         return ZX_ERROR;
     }
@@ -86,11 +86,11 @@ uint8_t ZX_Sensor::getModelVersion()
 uint8_t ZX_Sensor::getRegMapVersion()
 {
     uint8_t ver;
-    
+
     if ( !wireReadDataByte(ZX_REGVER, ver) ) {
         return ZX_ERROR;
     }
-    
+
     return ver;
 }
 
@@ -106,7 +106,7 @@ uint8_t ZX_Sensor::getRegMapVersion()
   */
 bool ZX_Sensor::setInterruptTrigger(InterruptType interrupts)
 {
-    
+
 #if DEBUG
     Serial.print(F("Setting interrupts: "));
     Serial.println(interrupts);
@@ -125,7 +125,7 @@ bool ZX_Sensor::setInterruptTrigger(InterruptType interrupts)
             if ( !setRegisterBit(ZX_DRE, DRE_HOVER) ) {
                 return false;
             }
-            if ( !setRegisterBit(ZX_DRE, DRE_HVG) ) {
+            if ( !setRegisterBit(ZX_DRE, DRE_HMG) ) {
                 return false;
             }
             break;
@@ -140,14 +140,14 @@ bool ZX_Sensor::setInterruptTrigger(InterruptType interrupts)
             }
             break;
     }
-    
+
 #if DEBUG
     uint8_t val;
     wireReadDataByte(ZX_DRE, val);
     Serial.print(F("ZX_DRE: b"));
     Serial.println(val, BIN);
 #endif
-    
+
     return true;
 }
 
@@ -158,7 +158,7 @@ bool ZX_Sensor::setInterruptTrigger(InterruptType interrupts)
  * @param[in] pin_pulse true: DR pulse. False: DR pin asserts until STATUS read
  * @return True if operation successful. False otherwise.
  */
-bool ZX_Sensor::configureInterrupts(    bool active_high, 
+bool ZX_Sensor::configureInterrupts(    bool active_high,
                                             bool pin_pulse /* = false */)
 {
     /* Set or clear polarity bit to make DR active-high or active-low */
@@ -171,7 +171,7 @@ bool ZX_Sensor::configureInterrupts(    bool active_high,
             return false;
         }
     }
-    
+
     /* Set or clear edge bit to make DR pulse or remain set until STATUS read */
     if ( pin_pulse ) {
         if ( !setRegisterBit(ZX_DRCFG, DRCFG_EDGE) ) {
@@ -182,14 +182,14 @@ bool ZX_Sensor::configureInterrupts(    bool active_high,
             return false;
         }
     }
-    
+
 #if DEBUG
     uint8_t val;
     wireReadDataByte(ZX_DRCFG, val);
     Serial.print(F("ZX_DRCFG: b"));
     Serial.println(val, BIN);
 #endif
-    
+
     return true;
 }
 
@@ -203,7 +203,7 @@ bool ZX_Sensor::enableInterrupts()
     if ( !setRegisterBit(ZX_DRCFG, DRCFG_EN) ) {
         return false;
     }
-    
+
     return true;
 }
 
@@ -217,7 +217,7 @@ bool ZX_Sensor::disableInterrupts()
     if ( !clearRegisterBit(ZX_DRCFG, DRCFG_EN) ) {
         return false;
     }
-    
+
     return true;
 }
 
@@ -229,11 +229,11 @@ bool ZX_Sensor::disableInterrupts()
 bool ZX_Sensor::clearInterrupt()
 {
     uint8_t val;
-    
+
     if ( !wireReadDataByte(ZX_STATUS, val) ) {
         return false;
     }
-    
+
     return true;
 }
 
@@ -249,7 +249,7 @@ bool ZX_Sensor::clearInterrupt()
 bool ZX_Sensor::positionAvailable()
 {
     uint8_t status;
-    
+
     /* Read STATUS register and extract DAV bit */
     if ( !wireReadDataByte(ZX_STATUS, status) ) {
         return false;
@@ -258,7 +258,7 @@ bool ZX_Sensor::positionAvailable()
     if ( status ) {
         return true;
     }
-    
+
     return false;
 }
 
@@ -270,7 +270,7 @@ bool ZX_Sensor::positionAvailable()
 bool ZX_Sensor::gestureAvailable()
 {
     uint8_t status;
-    
+
     /* Read STATUS register and extract SWP bit */
     if ( !wireReadDataByte(ZX_STATUS, status) ) {
         return false;
@@ -279,7 +279,7 @@ bool ZX_Sensor::gestureAvailable()
     if ( status ) {
         return true;
     }
-    
+
     return false;
 }
 
@@ -295,7 +295,7 @@ bool ZX_Sensor::gestureAvailable()
 uint8_t ZX_Sensor::readX()
 {
     uint8_t x_pos;
-    
+
     /* Read X Position register and return it */
     if ( !wireReadDataByte(ZX_XPOS, x_pos) ) {
         return ZX_ERROR;
@@ -314,7 +314,7 @@ uint8_t ZX_Sensor::readX()
 uint8_t ZX_Sensor::readZ()
 {
     uint8_t z_pos;
-    
+
     /* Read X Position register and return it */
     if ( !wireReadDataByte(ZX_ZPOS, z_pos) ) {
         return ZX_ERROR;
@@ -337,7 +337,7 @@ uint8_t ZX_Sensor::readZ()
 GestureType ZX_Sensor::readGesture()
 {
     uint8_t gesture;
-    
+
     /* Read GESTURE register and return the value */
     if ( !wireReadDataByte(ZX_GESTURE, gesture) ) {
         return NO_GESTURE;
@@ -366,19 +366,19 @@ GestureType ZX_Sensor::readGesture()
 uint8_t ZX_Sensor::readGestureSpeed()
 {
     uint8_t speed;
-    
+
     /* Read GESTURE register and return the value */
     if ( !wireReadDataByte(ZX_GSPEED, speed) ) {
         return ZX_ERROR;
     }
-    
+
     return speed;
 }
 
 /*******************************************************************************
  * Bit Manipulation
  ******************************************************************************/
- 
+
 /**
  * @brief sets a bit in a register over I2C
  *
@@ -388,19 +388,19 @@ uint8_t ZX_Sensor::readGestureSpeed()
 bool ZX_Sensor::setRegisterBit(uint8_t reg, uint8_t bit)
 {
     uint8_t val;
-    
+
     /* Read value from register */
     if ( !wireReadDataByte(reg, val) ) {
         return false;
     }
-    
+
     /* Set bits in register and write back to the register */
     val |= (1 << bit);
     if ( !wireWriteDataByte(reg, val) ) {
         return false;
     }
-    
-    return true;    
+
+    return true;
 }
 
 /**
@@ -412,20 +412,20 @@ bool ZX_Sensor::setRegisterBit(uint8_t reg, uint8_t bit)
 bool ZX_Sensor::clearRegisterBit(uint8_t reg, uint8_t bit)
 {
     uint8_t val;
-    
+
     /* Read value from register */
     if ( !wireReadDataByte(reg, val) ) {
         return false;
     }
-    
+
     /* Clear bit in register and write back to the register */
     val &= ~(1 << bit);
     if ( !wireWriteDataByte(reg, val) ) {
         return false;
     }
-    
-    return true;    
-} 
+
+    return true;
+}
 
 /*******************************************************************************
  * Raw I2C Reads and Writes
@@ -444,7 +444,7 @@ bool ZX_Sensor::wireWriteByte(uint8_t val)
     if( Wire.endTransmission() != 0 ) {
         return false;
     }
-    
+
     return true;
 }
 
@@ -476,12 +476,12 @@ bool ZX_Sensor::wireWriteDataByte(uint8_t reg, uint8_t val)
  */
 bool ZX_Sensor::wireReadDataByte(uint8_t reg, uint8_t &val)
 {
-    
+
     /* Indicate which register we want to read from */
     if (!wireWriteByte(reg)) {
         return false;
     }
-    
+
     /* Read from register */
     Wire.requestFrom(addr_, 1);
     while (Wire.available()) {
